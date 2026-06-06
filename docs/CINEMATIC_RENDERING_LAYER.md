@@ -12,8 +12,8 @@ Episode -> Scenes -> Shots -> Storyboard Images
 - `storyboard_images` stores one persisted image payload per shot.
 - `ShotPlannerService` creates deterministic shot plans from episode scenes.
 - `StoryboardService` renders shots into storyboard frames.
-- `OpenAIStoryboardImageProvider` uses OpenAI image generation when an API key is configured.
-- Fallback storyboard frames are persisted when image generation is unavailable, preserving demo flow.
+- `OpenAIStoryboardImageProvider` uses OpenAI image generation with `gpt-image-1`.
+- Rendering requires `OPENAI_API_KEY`; image-generation failures now surface as backend errors instead of persisting placeholder frames.
 
 ## APIs
 
@@ -46,7 +46,7 @@ The page displays:
 - Shot metadata
 - Camera angle
 - Duration
-- Generated or fallback storyboard frame
+- Generated storyboard frame
 - Provider/model status
 
 ## Video Adapter Foundation

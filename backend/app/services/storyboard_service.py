@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import base64
-import html
+import logging
 import textwrap
 import uuid
 from datetime import UTC, datetime
@@ -29,6 +28,8 @@ from app.schemas.storyboard import (
     StoryboardSceneRead,
 )
 from app.services.shot_planner_service import ShotPlannerService
+
+logger = logging.getLogger(__name__)
 
 
 class StoryboardService:
@@ -89,7 +90,11 @@ class StoryboardService:
         for shot in shots:
             prompt = self._build_prompt(shot)
             shot.prompt = prompt
-            if shot.storyboard_image is not None and not regenerate_images:
+            if (
+                shot.storyboard_image is not None
+                and shot.storyboard_image.status == "generated"
+                and not regenerate_images
+            ):
                 continue
 
             result = self._generate_image(prompt=prompt, shot=shot)
@@ -132,20 +137,24 @@ class StoryboardService:
 
     def _generate_image(self, *, prompt: str, shot: Shot) -> GeneratedStoryboardImage:
         if not self._settings.openai_api_key:
-            return self._placeholder_image(
-                shot=shot,
-                prompt=prompt,
-                error="OPENAI_API_KEY is missing; stored storyboard placeholder.",
+            raise RuntimeError(
+                "OPENAI_API_KEY is required to render storyboard images with OpenAI."
             )
 
         try:
             return OpenAIStoryboardImageProvider(settings=self._settings).generate(prompt)
         except Exception as error:
-            return self._placeholder_image(
-                shot=shot,
-                prompt=prompt,
-                error=f"OpenAI image generation failed: {error}",
+            logger.exception(
+                "Storyboard image generation failed",
+                extra={
+                    "shot_id": str(shot.id),
+                    "episode_id": str(shot.episode_id),
+                    "model": self._settings.openai_image_model,
+                },
             )
+            raise RuntimeError(
+                f"OpenAI storyboard image generation failed for shot {shot.id}: {error}"
+            ) from error
 
     def _upsert_storyboard_image(
         self,
@@ -177,6 +186,18 @@ class StoryboardService:
         image.error = result.error
         image.generated_at = datetime.now(UTC)
         self._db.add(image)
+        logger.info(
+            "Storyboard image saved",
+            extra={
+                "storyboard_image_id": str(image.id),
+                "shot_id": str(shot.id),
+                "episode_id": str(shot.episode_id),
+                "provider": result.provider,
+                "model": result.model,
+                "status": result.status,
+                "has_image_data": bool(result.image_data),
+            },
+        )
 
     def _build_prompt(self, shot: Shot) -> str:
         scene = shot.scene
@@ -239,66 +260,6 @@ class StoryboardService:
         if isinstance(value, list):
             return ", ".join(str(item) for item in value[:6] if item) or None
         return None
-
-    def _placeholder_image(
-        self,
-        *,
-        shot: Shot,
-        prompt: str,
-        error: str,
-    ) -> GeneratedStoryboardImage:
-        svg = self._placeholder_svg(shot)
-        encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
-        return GeneratedStoryboardImage(
-            provider="fallback",
-            model=self._settings.openai_image_model,
-            status="placeholder",
-            mime_type="image/svg+xml",
-            image_data=encoded,
-            image_url=None,
-            revised_prompt=prompt,
-            width=1536,
-            height=1024,
-            error=error,
-        )
-
-    def _placeholder_svg(self, shot: Shot) -> str:
-        title = html.escape(shot.scene.title or f"Scene {shot.scene.scene_number}")
-        shot_label = html.escape(f"{shot.shot_type} / {shot.camera_angle}")
-        description = html.escape(shot.visual_description)
-        lines = textwrap.wrap(description, width=72)[:5]
-        text_lines = "\n".join(
-            f'<text x="96" y="{430 + index * 44}" class="body">{line}</text>'
-            for index, line in enumerate(lines)
-        )
-        return f"""<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024"
-viewBox="0 0 1536 1024">
-<defs>
-<linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-<stop offset="0%" stop-color="#020617"/>
-<stop offset="50%" stop-color="#111827"/>
-<stop offset="100%" stop-color="#312e81"/>
-</linearGradient>
-<style>
-.eyebrow {{ fill: #93c5fd; font-family: Inter, Arial, sans-serif; font-size: 28px;
-letter-spacing: 8px; }}
-.title {{ fill: #ffffff; font-family: Inter, Arial, sans-serif; font-size: 72px;
-font-weight: 700; }}
-.meta {{ fill: #d8b4fe; font-family: Inter, Arial, sans-serif; font-size: 32px; }}
-.body {{ fill: #cbd5e1; font-family: Inter, Arial, sans-serif; font-size: 30px; }}
-</style>
-</defs>
-<rect width="1536" height="1024" fill="url(#bg)"/>
-<rect x="56" y="56" width="1424" height="912" rx="36" fill="none"
-stroke="#ffffff" stroke-opacity="0.18" stroke-width="2"/>
-<circle cx="1230" cy="250" r="260" fill="#38bdf8" fill-opacity="0.12"/>
-<circle cx="1040" cy="780" r="320" fill="#8b5cf6" fill-opacity="0.16"/>
-<text x="96" y="190" class="eyebrow">STORYBOARD FRAME</text>
-<text x="96" y="292" class="title">{title}</text>
-<text x="96" y="360" class="meta">{shot_label}</text>
-{text_lines}
-<text x="96" y="890" class="eyebrow">OPENAI IMAGE PLACEHOLDER</text>
-</svg>"""
 
     def _scene_read(self, scene: Scene) -> StoryboardSceneRead:
         return StoryboardSceneRead(

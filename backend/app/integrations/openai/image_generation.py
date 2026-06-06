@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
+from typing import Literal, cast
 
 from app.core.config import Settings, get_settings
 from app.integrations.openai.client import get_openai_client
 from openai import OpenAI
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -34,17 +38,41 @@ class OpenAIStoryboardImageProvider:
         self._client = client or get_openai_client(settings=self._settings)
 
     def generate(self, prompt: str) -> GeneratedStoryboardImage:
+        logger.info(
+            "Generating storyboard image with OpenAI",
+            extra={
+                "model": self._settings.openai_image_model,
+                "size": self._settings.openai_image_size,
+                "quality": self._settings.openai_image_quality,
+            },
+        )
         response = self._client.images.generate(
             model=self._settings.openai_image_model,
             prompt=prompt,
             size=self._settings.openai_image_size,
-            quality=self._settings.openai_image_quality,
-            response_format="b64_json",
-            output_format="png",
+            quality=cast(
+                Literal["standard", "hd", "low", "medium", "high", "auto"],
+                self._settings.openai_image_quality,
+            ),
+            output_format=cast(Literal["png", "jpeg", "webp"], "png"),
             n=1,
         )
+        if not response.data:
+            raise RuntimeError("OpenAI image generation returned no image data.")
+
         image = response.data[0]
+        if not image.b64_json:
+            raise RuntimeError("OpenAI image generation returned no base64 image bytes.")
+
         width, height = _parse_size(self._settings.openai_image_size)
+        logger.info(
+            "OpenAI storyboard image generation succeeded",
+            extra={
+                "model": self._settings.openai_image_model,
+                "size": self._settings.openai_image_size,
+                "mime_type": "image/png",
+            },
+        )
         return GeneratedStoryboardImage(
             provider=self.provider_name,
             model=self._settings.openai_image_model,
