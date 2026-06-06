@@ -1,7 +1,8 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -10,7 +11,9 @@ class Settings(BaseSettings):
     app_env: str = "local"
     app_name: str = "Universe Studio API"
     api_v1_prefix: str = "/api/v1"
-    backend_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    backend_cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:3000"]
+    )
 
     database_url: str = (
         "postgresql+psycopg://universe:universe_dev_password@localhost:5432/universe_studio"

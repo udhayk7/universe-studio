@@ -40,6 +40,18 @@ cp frontend/.env.example frontend/.env.local
 cp backend/.env.example backend/.env
 ```
 
+Add your OpenAI key:
+
+- Docker Compose: paste it into root `.env` as `OPENAI_API_KEY=sk-...`
+- Local backend only: paste it into `backend/.env` as `OPENAI_API_KEY=sk-...`
+- Do not put the OpenAI key in frontend env files or any `NEXT_PUBLIC_*` variable.
+
+Verify OpenAI configuration:
+
+```bash
+pnpm openai:verify
+```
+
 Install dependencies:
 
 ```bash

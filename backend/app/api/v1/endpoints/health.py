@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.integrations.neo4j.connection import Neo4jConnectionManager, get_neo4j_manager
 from app.integrations.neo4j.health import Neo4jHealthService
+from app.integrations.openai.status import get_openai_auth_status
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -16,6 +17,11 @@ router = APIRouter(prefix="/health", tags=["health"])
 @router.get("")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get("/openai")
+def openai_health() -> dict[str, str | bool | float]:
+    return get_openai_auth_status().to_response()
 
 
 @router.get("/postgres")
