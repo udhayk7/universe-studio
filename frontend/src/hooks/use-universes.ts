@@ -13,6 +13,7 @@ import {
   getConsistencyDashboard,
   getEpisode,
   getEpisodeScenes,
+  getEpisodeStoryboard,
   getEpisodeTrace,
   getJob,
   getJobTrace,
@@ -29,11 +30,13 @@ import {
   getUniverseObjects,
   getUniverseRelationships,
   getUniverses,
+  renderEpisodeStoryboard,
   setupDemo,
 } from "@/services/api/universes";
 import type {
   CreateUniversePayload,
   EpisodeGeneratePayload,
+  StoryboardRenderPayload,
   TimelineBranchPayload,
 } from "@/types/universe";
 
@@ -54,6 +57,7 @@ export const universeQueryKeys = {
   episode: (id: string) => ["episodes", id] as const,
   episodeScenes: (id: string) => ["episodes", id, "scenes"] as const,
   episodeTrace: (id: string) => ["episodes", id, "trace"] as const,
+  episodeStoryboard: (id: string) => ["episodes", id, "storyboard"] as const,
   consistency: (universeId: string) => ["universes", universeId, "consistency"] as const,
   timelines: (universeId: string) => ["universes", universeId, "timelines"] as const,
   timeline: (id: string) => ["timelines", id] as const,
@@ -246,6 +250,26 @@ export function useEpisodeTrace(id: string) {
     queryKey: universeQueryKeys.episodeTrace(id),
     queryFn: () => getEpisodeTrace(id),
     enabled: Boolean(id),
+  });
+}
+
+export function useEpisodeStoryboard(id: string) {
+  return useQuery({
+    queryKey: universeQueryKeys.episodeStoryboard(id),
+    queryFn: () => getEpisodeStoryboard(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useRenderEpisodeStoryboard(id: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: StoryboardRenderPayload = {}) => renderEpisodeStoryboard(id, payload),
+    onSuccess: (storyboard) => {
+      queryClient.setQueryData(universeQueryKeys.episodeStoryboard(id), storyboard);
+      queryClient.invalidateQueries({ queryKey: universeQueryKeys.episodeScenes(id) });
+    },
   });
 }
 

@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from app.db.models.episode import Episode
     from app.db.models.location import Location
     from app.db.models.scene_participant import SceneParticipant
+    from app.db.models.shot import Shot
+    from app.db.models.storyboard_image import StoryboardImage
 
 
 class Scene(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -44,6 +46,16 @@ class Scene(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     location: Mapped[Location | None] = relationship("Location", back_populates="scenes")
     participants: Mapped[list[SceneParticipant]] = relationship(
         "SceneParticipant",
+        back_populates="scene",
+        cascade="all, delete-orphan",
+    )
+    shots: Mapped[list[Shot]] = relationship(
+        "Shot",
+        back_populates="scene",
+        cascade="all, delete-orphan",
+    )
+    storyboard_images: Mapped[list[StoryboardImage]] = relationship(
+        "StoryboardImage",
         back_populates="scene",
         cascade="all, delete-orphan",
     )

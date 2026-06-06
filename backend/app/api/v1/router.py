@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     ingestion,
     jobs,
     memory_explorer,
+    storyboards,
     timelines,
     universes,
 )
@@ -23,5 +24,6 @@ api_router.include_router(characters.router)
 api_router.include_router(timelines.router)
 api_router.include_router(jobs.router)
 api_router.include_router(episodes.router)
+api_router.include_router(storyboards.router)
 api_router.include_router(consistency.router)
 api_router.include_router(demo.router)

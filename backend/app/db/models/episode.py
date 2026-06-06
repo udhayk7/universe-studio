@@ -13,6 +13,8 @@ from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 if TYPE_CHECKING:
     from app.db.models.consistency_check import ConsistencyCheck
     from app.db.models.scene import Scene
+    from app.db.models.shot import Shot
+    from app.db.models.storyboard_image import StoryboardImage
     from app.db.models.timeline import Timeline
     from app.db.models.timeline_commit import TimelineCommit
     from app.db.models.universe import Universe
@@ -60,4 +62,14 @@ class Episode(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     consistency_checks: Mapped[list[ConsistencyCheck]] = relationship(
         "ConsistencyCheck",
         back_populates="episode",
+    )
+    shots: Mapped[list[Shot]] = relationship(
+        "Shot",
+        back_populates="episode",
+        cascade="all, delete-orphan",
+    )
+    storyboard_images: Mapped[list[StoryboardImage]] = relationship(
+        "StoryboardImage",
+        back_populates="episode",
+        cascade="all, delete-orphan",
     )

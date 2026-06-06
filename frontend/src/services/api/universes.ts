@@ -13,6 +13,9 @@ import type {
   MemoryLocation,
   MemoryObject,
   MemoryRelationship,
+  EpisodeStoryboard,
+  Shot,
+  StoryboardRenderPayload,
   Timeline,
   TimelineBranchPayload,
   TimelineBranchResult,
@@ -114,6 +117,21 @@ export function getEpisodeScenes(id: string) {
 
 export function getEpisodeTrace(id: string) {
   return apiRequest<AgentTrace>(`/episodes/${id}/trace`);
+}
+
+export function getShot(id: string) {
+  return apiRequest<Shot>(`/shots/${id}`);
+}
+
+export function getEpisodeStoryboard(id: string) {
+  return apiRequest<EpisodeStoryboard>(`/storyboards/${id}`);
+}
+
+export function renderEpisodeStoryboard(id: string, payload: StoryboardRenderPayload) {
+  return apiRequest<EpisodeStoryboard>(`/episodes/${id}/storyboard/render`, {
+    method: "POST",
+    body: payload,
+  });
 }
 
 export function getConsistencyDashboard(universeId: string) {

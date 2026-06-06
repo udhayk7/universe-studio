@@ -11,7 +11,7 @@ def test_root_health_check(client: TestClient) -> None:
 
 
 def test_openai_health_reports_missing_key(client: TestClient, monkeypatch) -> None:
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
     get_settings.cache_clear()
 
     try:

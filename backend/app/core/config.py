@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "Universe Studio API"
     api_v1_prefix: str = "/api/v1"
     backend_cors_origins: Annotated[list[str], NoDecode] = Field(
-        default_factory=lambda: ["http://localhost:3000"]
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:3001"]
     )
 
     database_url: str = (
@@ -30,6 +30,9 @@ class Settings(BaseSettings):
 
     openai_api_key: str | None = None
     openai_model: str = "gpt-5"
+    openai_image_model: str = "gpt-image-1"
+    openai_image_size: str = "1536x1024"
+    openai_image_quality: str = "medium"
     openai_timeout_seconds: float = 90.0
     universe_extraction_max_chars: int = 60_000
 

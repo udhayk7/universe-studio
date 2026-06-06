@@ -9,6 +9,7 @@ import {
   Clapperboard,
   Clock,
   Database,
+  Images,
   MapPin,
   PenLine,
   Quote,
@@ -86,10 +87,20 @@ export function EpisodeViewer({ universeId, episodeId }: EpisodeViewerProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to universe
         </ButtonLink>
-        <ButtonLink href={`/universes/${universeId}/episodes/new`} variant="ghost" size="sm">
-          <Clapperboard className="h-4 w-4" />
-          Generate another
-        </ButtonLink>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink
+            href={`/universes/${universeId}/episodes/${episodeId}/storyboard`}
+            variant="secondary"
+            size="sm"
+          >
+            <Images className="h-4 w-4" />
+            Storyboard
+          </ButtonLink>
+          <ButtonLink href={`/universes/${universeId}/episodes/new`} variant="ghost" size="sm">
+            <Clapperboard className="h-4 w-4" />
+            Generate another
+          </ButtonLink>
+        </div>
       </div>
 
       <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-black/35">

@@ -12,7 +12,9 @@ from app.db.models.memory_entry import MemoryEntry
 from app.db.models.relationship import Relationship
 from app.db.models.scene import Scene
 from app.db.models.scene_participant import SceneParticipant
+from app.db.models.shot import Shot
 from app.db.models.source_input import SourceInput
+from app.db.models.storyboard_image import StoryboardImage
 from app.db.models.timeline import Timeline
 from app.db.models.timeline_commit import TimelineCommit
 from app.db.models.timeline_commit_event import TimelineCommitEvent
@@ -34,7 +36,9 @@ __all__ = [
     "Relationship",
     "Scene",
     "SceneParticipant",
+    "Shot",
     "SourceInput",
+    "StoryboardImage",
     "Timeline",
     "TimelineCommit",
     "TimelineCommitEvent",

@@ -320,6 +320,71 @@ export type EpisodeScene = {
   updated_at: string;
 };
 
+export type StoryboardImage = {
+  id: string;
+  episode_id: string;
+  scene_id: string;
+  shot_id: string;
+  provider: string;
+  model: string | null;
+  status: string;
+  mime_type: string | null;
+  image_data: string | null;
+  image_url: string | null;
+  prompt: string;
+  revised_prompt: string | null;
+  width: number | null;
+  height: number | null;
+  error: string | null;
+  generated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Shot = {
+  id: string;
+  episode_id: string;
+  scene_id: string;
+  scene_number: number;
+  scene_title: string | null;
+  shot_number: number;
+  shot_type: string;
+  camera_angle: string;
+  duration_seconds: number;
+  visual_description: string;
+  prompt: string | null;
+  status: string;
+  storyboard_image: StoryboardImage | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StoryboardScene = {
+  scene_id: string;
+  scene_number: number;
+  title: string | null;
+  location_name: string | null;
+  summary: string | null;
+  visual_direction: string | null;
+  participants: EpisodeParticipant[];
+  shots: Shot[];
+};
+
+export type EpisodeStoryboard = {
+  episode_id: string;
+  universe_id: string;
+  title: string;
+  summary: string | null;
+  scene_count: number;
+  shot_count: number;
+  generated_image_count: number;
+  scenes: StoryboardScene[];
+};
+
+export type StoryboardRenderPayload = {
+  regenerate_images?: boolean;
+};
+
 export type Timeline = {
   id: string;
   universe_id: string;
