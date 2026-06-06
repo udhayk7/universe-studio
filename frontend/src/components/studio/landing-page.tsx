@@ -12,6 +12,7 @@ import {
 import Image from "next/image";
 import { Navbar } from "@/components/layout/navbar";
 import { SectionHeader } from "@/components/common/section-header";
+import { DemoModeButton } from "@/components/studio/demo-mode-button";
 import { DemoTimelinePreview } from "@/components/studio/demo-timeline-preview";
 import { FeatureCard } from "@/components/studio/feature-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -82,6 +83,7 @@ export function LandingPage() {
               <ButtonLink href="/universes/new" size="lg">
                 Create Universe
               </ButtonLink>
+              <DemoModeButton size="lg" variant="primary" className="sm:items-start" />
               <ButtonLink href="#demo" variant="secondary" size="lg">
                 View Demo
               </ButtonLink>

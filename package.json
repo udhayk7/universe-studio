@@ -12,6 +12,8 @@
     "format": "pnpm --dir frontend format",
     "compose:up": "docker compose up -d",
     "compose:down": "docker compose down",
-    "compose:logs": "docker compose logs -f"
+    "compose:logs": "docker compose logs -f",
+    "demo:setup": "./scripts/setup_demo.sh",
+    "demo:validate": "./scripts/validate_demo.sh"
   }
 }

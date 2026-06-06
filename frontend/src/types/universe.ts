@@ -89,6 +89,34 @@ export type AgentTrace = {
   steps: AgentTraceStep[];
 };
 
+export type DemoSeedSummary = {
+  characters: number;
+  locations: number;
+  objects: number;
+  relationships: number;
+  events: number;
+  memory_entries: number;
+  timelines: number;
+  episodes: number;
+  scenes: number;
+  agent_runs: number;
+  consistency_checks: number;
+};
+
+export type DemoSeedResult = {
+  universe_id: string;
+  timeline_a_id: string;
+  timeline_b_id: string;
+  timeline_a_name: string;
+  timeline_b_name: string;
+  episode_ids: string[];
+  branch_event_id: string;
+  alternate_future_episode_id: string;
+  summary: DemoSeedSummary;
+  neo4j_synced: boolean;
+  neo4j_message: string | null;
+};
+
 export type Character = {
   id: string;
   universe_id: string;

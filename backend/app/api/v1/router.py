@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     characters,
     consistency,
+    demo,
     episodes,
     health,
     ingestion,
@@ -23,3 +24,4 @@ api_router.include_router(timelines.router)
 api_router.include_router(jobs.router)
 api_router.include_router(episodes.router)
 api_router.include_router(consistency.router)
+api_router.include_router(demo.router)

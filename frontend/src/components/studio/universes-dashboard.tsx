@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
 import { LoadingState } from "@/components/common/loading-state";
 import { SectionHeader } from "@/components/common/section-header";
+import { DemoModeButton } from "@/components/studio/demo-mode-button";
 import { UniverseCard } from "@/components/studio/universe-card";
 import { ButtonLink } from "@/components/ui/button";
 import { useUniverses } from "@/hooks/use-universes";
@@ -20,10 +21,13 @@ export function UniversesDashboard() {
           title="Universes"
           description="Every world you create becomes a persistent source of truth for future stories."
         />
-        <ButtonLink href="/universes/new">
-          <Plus className="h-4 w-4" />
-          Create Universe
-        </ButtonLink>
+        <div className="flex flex-wrap gap-3">
+          <DemoModeButton size="md" variant="secondary" />
+          <ButtonLink href="/universes/new">
+            <Plus className="h-4 w-4" />
+            Create Universe
+          </ButtonLink>
+        </div>
       </div>
 
       <div className="mt-10">
@@ -45,10 +49,13 @@ export function UniversesDashboard() {
             title="No universes yet"
             description="Start with a premise, a scene, or a script fragment and give the studio its first world."
             action={
-              <ButtonLink href="/universes/new">
-                <Plus className="h-4 w-4" />
-                Create Universe
-              </ButtonLink>
+              <div className="flex flex-wrap justify-center gap-3">
+                <DemoModeButton size="md" variant="secondary" />
+                <ButtonLink href="/universes/new">
+                  <Plus className="h-4 w-4" />
+                  Create Universe
+                </ButtonLink>
+              </div>
             }
           />
         ) : null}

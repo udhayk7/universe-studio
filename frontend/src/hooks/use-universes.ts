@@ -29,6 +29,7 @@ import {
   getUniverseObjects,
   getUniverseRelationships,
   getUniverses,
+  setupDemo,
 } from "@/services/api/universes";
 import type {
   CreateUniversePayload,
@@ -96,6 +97,20 @@ export function useCreateUniverseFromInput() {
     mutationFn: (formData: FormData) => createUniverseFromInput(formData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: universeQueryKeys.all });
+    },
+  });
+}
+
+export function useSetupDemo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: setupDemo,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: universeQueryKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: universeQueryKeys.detail(result.universe_id),
+      });
     },
   });
 }

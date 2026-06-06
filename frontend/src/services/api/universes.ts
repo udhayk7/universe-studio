@@ -5,6 +5,7 @@ import type {
   CharacterContextPack,
   ConsistencyDashboard,
   CreateUniversePayload,
+  DemoSeedResult,
   Episode,
   EpisodeGeneratePayload,
   EpisodeScene,
@@ -47,6 +48,13 @@ export function createUniverseFromInput(formData: FormData) {
 
 export function getJob(id: string) {
   return apiRequest<UniverseJob>(`/jobs/${id}`);
+}
+
+export function setupDemo() {
+  return apiRequest<DemoSeedResult>("/demo/setup", {
+    method: "POST",
+    body: { reset: true, sync_neo4j: true },
+  });
 }
 
 export function getJobTrace(id: string) {
