@@ -76,6 +76,26 @@ Start the app:
 docker compose up
 ```
 
+Run database migrations:
+
+```bash
+pnpm db:migrate
+```
+
+This uses the backend virtual environment directly. The equivalent raw command is:
+
+```bash
+cd backend
+.venv/bin/alembic upgrade head
+```
+
+Verify backend dependencies, database connectivity, Neo4j connectivity, OpenAI config, and
+Alembic status:
+
+```bash
+pnpm backend:verify
+```
+
 Open:
 
 - Frontend: http://localhost:3000

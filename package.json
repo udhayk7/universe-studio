@@ -13,8 +13,12 @@
     "compose:up": "docker compose up -d",
     "compose:down": "docker compose down",
     "compose:logs": "docker compose logs -f",
+    "db:current": "./scripts/run_alembic.sh current",
+    "db:history": "./scripts/run_alembic.sh history",
+    "db:migrate": "./scripts/run_alembic.sh upgrade head",
     "demo:setup": "./scripts/setup_demo.sh",
     "demo:validate": "./scripts/validate_demo.sh",
+    "backend:verify": "./scripts/verify_backend_environment.sh",
     "env:verify": "./scripts/verify_environment.sh",
     "openai:verify": "./scripts/verify_openai.sh"
   }
