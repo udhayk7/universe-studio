@@ -20,11 +20,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 border-b border-white/10 bg-black/45 backdrop-blur-xl">
             <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-              <Link href="/" className="flex items-center gap-3 lg:hidden">
+              <Link href="/" className="flex min-w-0 items-center gap-3 lg:hidden">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-sky-200">
                   <Sparkles className="h-4 w-4" />
                 </span>
-                <span className="text-sm font-semibold">Universe Studio</span>
+                <span className="truncate text-sm font-semibold">Universe Studio</span>
               </Link>
               <button
                 onClick={() => setMobileNavOpen((value) => !value)}
@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Studio</p>
                 <p className="mt-1 text-sm text-slate-300">Persistent cinematic universes</p>
               </div>
-              <ButtonLink href="/universes/new" size="sm">
+              <ButtonLink href="/universes/new" size="sm" className="hidden sm:inline-flex">
                 <Plus className="h-4 w-4" />
                 Create Universe
               </ButtonLink>

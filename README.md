@@ -2,21 +2,37 @@
 
 Create worlds, not clips.
 
-This repository is a production-quality hackathon foundation for a memory-first cinematic universe studio. It intentionally contains infrastructure, dependency manifests, app boundaries, and documentation only. Business logic, domain routes, memory writes, and agent workflows should be added in future implementation passes.
+Universe Studio is a memory-first cinematic universe platform built for a hackathon demo. Instead of generating isolated AI video prompts, it turns an idea or script into a persistent story world with characters, relationships, events, timelines, branch history, consistency checks, and agent traces.
 
-## Stack
+## Final Demo
 
-- Frontend: Next.js 15, TypeScript, TailwindCSS, ShadCN UI, Zustand, TanStack Query, React Flow, Framer Motion
-- Backend: FastAPI, Python 3.12, SQLAlchemy, Alembic, Pydantic
-- AI: OpenAI SDK, OpenAI Agents SDK, OpenAI Responses API
-- Data: PostgreSQL, Neo4j
-- Storage: Supabase Storage
-- Infrastructure: Docker, Docker Compose
+The deterministic judge demo is `Memory Market 2094`.
 
-## Local Setup
+Premise: Memories are bought and sold as currency.
 
-1. Install Docker Desktop, Node.js, pnpm, and Python 3.12.
-2. Copy environment templates:
+Seeded demo content:
+
+- 8 major characters
+- 6 locations
+- 6 world objects
+- 48 timeline-specific relationships
+- 29+ events
+- 2 completed episodes
+- Timeline A: Maya survives
+- Timeline B: Maya dies
+- Agent traces for Historian, Story, Director, Consistency, and Memory Update
+- Consistency dashboard issues and validation reports
+
+## Quick Start
+
+Install prerequisites:
+
+- Docker Desktop
+- Node.js 20+
+- pnpm 9+
+- Python 3.12
+
+Set up environment files:
 
 ```bash
 cp .env.example .env
@@ -24,38 +40,137 @@ cp frontend/.env.example frontend/.env.local
 cp backend/.env.example backend/.env
 ```
 
-3. Fill in `OPENAI_API_KEY` and Supabase values.
-4. Install frontend dependencies:
+Install dependencies:
 
 ```bash
 pnpm install
-```
 
-5. Install backend dependencies:
-
-```bash
 cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+cd ..
 ```
 
-6. Start local infrastructure and apps:
+Run the deterministic demo setup:
+
+```bash
+pnpm demo:setup
+```
+
+Start the app:
 
 ```bash
 docker compose up
 ```
 
-Frontend: http://localhost:3000
+Open:
 
-Backend: http://localhost:8000
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+- API docs: http://localhost:8000/docs
+- Neo4j Browser: http://localhost:7474
 
-Backend health: http://localhost:8000/health
+## Demo Mode
 
-Neo4j Browser: http://localhost:7474
+On the landing page or Universes dashboard, click `Demo Mode`.
 
-## Documentation
+This calls:
 
-- Repository foundation: `docs/REPOSITORY_FOUNDATION.md`
-- Coding and naming conventions: `docs/CONVENTIONS.md`
-- Docker notes: `docker/README.md`
+```http
+POST /api/v1/demo/setup
+```
+
+It seeds `Memory Market 2094`, syncs Neo4j when available, and redirects into the demo universe.
+
+## Validation
+
+Run:
+
+```bash
+pnpm demo:validate
+```
+
+The validator checks:
+
+- Universe creation
+- Graph generation
+- Character dossiers
+- Episode generation
+- Timeline branching
+- Alternate future generation
+- Timeline differences
+- Consistency checks
+- Agent traces
+
+## Core Features
+
+- Universe creation from user input
+- Structured extraction into durable world state
+- Character Memory Engine
+- Character dossier UI
+- Universe Memory Explorer with React Flow
+- Episode Generation Engine
+- Timeline branching and alternate futures
+- Branch-aware memory retrieval
+- Consistency Engine
+- Agent Trace System
+- Deterministic hackathon demo seeder
+
+## Stack
+
+Frontend:
+
+- Next.js 15
+- TypeScript
+- TailwindCSS
+- ShadCN-style UI primitives
+- Zustand
+- TanStack Query
+- React Flow
+- Framer Motion
+
+Backend:
+
+- FastAPI
+- Python 3.12
+- SQLAlchemy 2.0
+- Alembic
+- Pydantic
+- OpenAI SDK
+- OpenAI Agents SDK
+
+Data:
+
+- PostgreSQL with pgvector
+- Neo4j
+- Supabase Storage foundation
+
+Infrastructure:
+
+- Docker
+- Docker Compose
+
+## Key Docs
+
+- [Demo Walkthrough](docs/DEMO_WALKTHROUGH.md)
+- [Demo Flow](docs/DEMO_FLOW.md)
+- [Demo Validation Checklist](docs/DEMO_VALIDATION_CHECKLIST.md)
+- [Judge Presentation Assets](docs/JUDGE_PRESENTATION_ASSETS.md)
+- [Technical Deep Dive](docs/TECHNICAL_DEEP_DIVE.md)
+- [Architecture Summary](docs/ARCHITECTURE_SUMMARY.md)
+- [Judge FAQ](docs/JUDGE_FAQ.md)
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [Launch Readiness Report](docs/LAUNCH_READINESS_REPORT.md)
+
+## Known Limitations
+
+- No video, image, or voice generation yet.
+- The demo seeder is deterministic by design, so judges can reliably inspect the product.
+- Full AI workflows require `OPENAI_API_KEY`.
+- Supabase Storage is scaffolded but not central to the current demo.
+- Some integration tests require `TEST_DATABASE_URL`.
+
+## Judge Narrative
+
+Universe Studio is not another AI clip generator. It is a versioned memory engine for cinematic universes. The demo shows how persistent characters, relationships, events, timelines, and consistency agents make future generation causally connected to the world that came before.

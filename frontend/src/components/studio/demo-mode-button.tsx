@@ -28,13 +28,14 @@ export function DemoModeButton({
   }
 
   return (
-    <div className={cn("inline-flex flex-col gap-2", className)}>
+    <div className={cn("flex w-full flex-col gap-2 sm:inline-flex sm:w-auto", className)}>
       <Button
         type="button"
         size={size}
         variant={variant}
         onClick={handleClick}
         disabled={setupDemo.isPending}
+        className="w-full sm:w-auto"
       >
         {setupDemo.isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />

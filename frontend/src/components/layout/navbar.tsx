@@ -23,8 +23,8 @@ export function Navbar() {
             Demo
           </Link>
         </nav>
-        <ButtonLink href="/universes/new" size="sm">
-          Create
+        <ButtonLink href="/universes" size="sm">
+          Studio
           <ArrowRight className="h-4 w-4" />
         </ButtonLink>
       </div>

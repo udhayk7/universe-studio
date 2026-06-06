@@ -14,6 +14,7 @@
     "compose:down": "docker compose down",
     "compose:logs": "docker compose logs -f",
     "demo:setup": "./scripts/setup_demo.sh",
-    "demo:validate": "./scripts/validate_demo.sh"
+    "demo:validate": "./scripts/validate_demo.sh",
+    "env:verify": "./scripts/verify_environment.sh"
   }
 }

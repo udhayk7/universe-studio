@@ -45,6 +45,13 @@ const features = [
   },
 ];
 
+const demoStats = [
+  { label: "Characters", value: "8" },
+  { label: "Relationships", value: "48" },
+  { label: "Timelines", value: "2" },
+  { label: "Agent Steps", value: "10" },
+];
+
 export function LandingPage() {
   return (
     <div className="min-h-screen overflow-hidden bg-[#050507] text-white">
@@ -79,7 +86,7 @@ export function LandingPage() {
             <p className="mt-6 max-w-2xl text-balance text-xl leading-8 text-slate-200 sm:text-2xl">
               Create worlds, not clips.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <ButtonLink href="/universes/new" size="lg">
                 Create Universe
               </ButtonLink>
@@ -87,6 +94,19 @@ export function LandingPage() {
               <ButtonLink href="#demo" variant="secondary" size="lg">
                 View Demo
               </ButtonLink>
+            </div>
+            <div className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+              {demoStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 backdrop-blur-xl"
+                >
+                  <p className="text-2xl font-semibold tracking-[-0.02em] text-white">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>
