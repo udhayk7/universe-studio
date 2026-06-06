@@ -10,6 +10,7 @@ import {
   Database,
   Loader2,
   PenLine,
+  ShieldCheck,
   WandSparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -43,13 +44,20 @@ const steps = [
     label: "Director Agent",
     detail: "Scenes",
     threshold: 62,
-    completeAt: 82,
+    completeAt: 78,
     icon: Clapperboard,
+  },
+  {
+    label: "Consistency Agent",
+    detail: "Continuity",
+    threshold: 78,
+    completeAt: 88,
+    icon: ShieldCheck,
   },
   {
     label: "Memory Update",
     detail: "Consequences",
-    threshold: 82,
+    threshold: 88,
     completeAt: 100,
     icon: Database,
   },
@@ -228,7 +236,7 @@ export function EpisodeGeneration({ universeId }: EpisodeGenerationProps) {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           {steps.map((step) => (
             <StageCard
               key={step.label}

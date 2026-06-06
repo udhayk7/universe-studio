@@ -57,6 +57,11 @@ class ConsistencyCheckRead(TimestampedResponse):
     status: str
 
 
+class ConsistencyCheckResult(BaseModel):
+    report: ConsistencyReport
+    checks: list[ConsistencyCheckRead] = Field(default_factory=list)
+
+
 class ConsistencyDashboardSummary(BaseModel):
     universe_id: uuid.UUID
     open_issues: int

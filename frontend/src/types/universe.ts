@@ -34,6 +34,61 @@ export type UniverseJob = {
   updated_at: string;
 };
 
+export type ConsistencySeverity = "low" | "medium" | "high" | "critical";
+
+export type ConsistencyStatus = "open" | "resolved" | "ignored" | string;
+
+export type ConsistencyCheck = {
+  id: string;
+  universe_id: string;
+  timeline_id: string;
+  episode_id: string | null;
+  severity: ConsistencySeverity | string;
+  issue_type: string;
+  description: string;
+  suggested_fix: string | null;
+  affected_entities: Array<Record<string, unknown>>;
+  status: ConsistencyStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ConsistencyDashboard = {
+  universe_id: string;
+  open_issues: number;
+  resolved_issues: number;
+  severity_breakdown: Record<ConsistencySeverity, number>;
+  timeline_conflicts: number;
+  character_conflicts: number;
+  relationship_conflicts: number;
+  world_rule_violations: number;
+  branch_conflicts: number;
+  issues: ConsistencyCheck[];
+};
+
+export type AgentTraceStep = {
+  id: string;
+  universe_id: string | null;
+  job_id: string | null;
+  episode_id: string | null;
+  agent_name: string;
+  input_summary: string | null;
+  output_summary: string | null;
+  status: string;
+  started_at: string | null;
+  completed_at: string | null;
+  duration_ms: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AgentTrace = {
+  trace_id: string | null;
+  episode_id: string | null;
+  job_id: string | null;
+  steps: AgentTraceStep[];
+};
+
 export type Character = {
   id: string;
   universe_id: string;

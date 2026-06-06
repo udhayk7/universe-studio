@@ -8,6 +8,7 @@ import {
   Clapperboard,
   GitBranch,
   Library,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ const tabs = [
   { value: "characters", label: "Characters", icon: Users },
   { value: "timeline", label: "Timeline", icon: GitBranch },
   { value: "memory", label: "Memory", icon: BookOpen },
+  { value: "consistency", label: "Consistency", icon: ShieldCheck },
 ] as const;
 
 type TabValue = (typeof tabs)[number]["value"];
@@ -111,6 +113,10 @@ export function UniverseDetail({ id }: UniverseDetailProps) {
                 <BookOpen className="h-4 w-4" />
                 Memory Explorer
               </ButtonLink>
+              <ButtonLink href={`/universes/${id}/consistency`} variant="secondary">
+                <ShieldCheck className="h-4 w-4" />
+                Consistency
+              </ButtonLink>
             </div>
           </div>
         </div>
@@ -189,6 +195,20 @@ export function UniverseDetail({ id }: UniverseDetailProps) {
                 <ButtonLink href={`/universes/${id}/memory`}>
                   <BookOpen className="h-4 w-4" />
                   Memory Explorer
+                </ButtonLink>
+              }
+            />
+          ) : null}
+
+          {activeTab === "consistency" ? (
+            <EmptyState
+              icon={ShieldCheck}
+              title="Open continuity checks"
+              description="Review agent validation, unresolved contradictions, and branch leakage."
+              action={
+                <ButtonLink href={`/universes/${id}/consistency`}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Consistency Dashboard
                 </ButtonLink>
               }
             />

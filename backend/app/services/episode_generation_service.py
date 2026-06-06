@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from app.agents.episode_agents import EpisodeAgentRunner
-from app.db.models.agent_run import AgentRun
 from app.schemas.episode_generation import EpisodeContextPack, EpisodeOutline
+from app.services.agent_trace_service import AgentTraceService
+from app.services.consistency_service import ConsistencyService
 from app.services.episode_historian_service import EpisodeHistorianService
 from app.services.episode_persistence_service import (
     EpisodePersistenceResult,
@@ -25,6 +25,7 @@ class EpisodeGenerationService:
     ) -> None:
         self._db = db
         self._job_service = JobService(db)
+        self._trace_service = AgentTraceService(db)
         self._agent_runner = agent_runner or EpisodeAgentRunner()
 
     def generate(
@@ -42,7 +43,7 @@ class EpisodeGenerationService:
             message="Historian Agent reading universe memory",
         )
 
-        historian_run = self._start_agent_run(
+        historian_run = self._trace_service.start(
             universe_id=universe_id,
             job_id=job_id,
             agent_name="Historian Agent",
@@ -54,7 +55,7 @@ class EpisodeGenerationService:
             timeline_id=timeline_id,
         )
         context = self._agent_runner.run_historian_agent(self._historian_input(raw_context))
-        self._complete_agent_run(
+        self._trace_service.complete(
             historian_run,
             output_summary=(
                 f"Built context with {len(context.characters)} characters, "
@@ -68,14 +69,14 @@ class EpisodeGenerationService:
             progress=32,
             message="Story Agent shaping episode outline",
         )
-        story_run = self._start_agent_run(
+        story_run = self._trace_service.start(
             universe_id=universe_id,
             job_id=job_id,
             agent_name="Story Agent",
             input_summary="Episode context pack and user request.",
         )
         outline = self._agent_runner.run_story_agent(self._story_input(context))
-        self._complete_agent_run(
+        self._trace_service.complete(
             story_run,
             output_summary=f"Created outline '{outline.title}' with {len(outline.beats)} beats.",
         )
@@ -85,7 +86,7 @@ class EpisodeGenerationService:
             progress=62,
             message="Director Agent writing cinematic scenes",
         )
-        director_run = self._start_agent_run(
+        director_run = self._trace_service.start(
             universe_id=universe_id,
             job_id=job_id,
             agent_name="Director Agent",
@@ -94,7 +95,7 @@ class EpisodeGenerationService:
         generated_episode = self._agent_runner.run_director_agent(
             self._director_input(context, outline)
         )
-        self._complete_agent_run(
+        self._trace_service.complete(
             director_run,
             output_summary=(
                 f"Generated '{generated_episode.title}' with "
@@ -104,19 +105,83 @@ class EpisodeGenerationService:
 
         self._job_service.update(
             job_id,
-            progress=82,
-            message="Persisting episode, scenes, and timeline events",
+            progress=78,
+            message="Consistency Agent validating continuity",
+        )
+        consistency_run = self._trace_service.start(
+            universe_id=universe_id,
+            job_id=job_id,
+            agent_name="Consistency Agent",
+            input_summary=(
+                "Generated episode, branch-aware memory, character states, "
+                "and world rules."
+            ),
+        )
+        consistency_service = ConsistencyService(self._db)
+        consistency_report = consistency_service.validate_generated_episode(
+            context=context,
+            generated=generated_episode,
+        )
+        self._trace_service.complete(
+            consistency_run,
+            output_summary=(
+                f"Verdict {consistency_report.verdict}; found "
+                f"{len(consistency_report.issues)} issue"
+                f"{'' if len(consistency_report.issues) == 1 else 's'}."
+            ),
+        )
+        if consistency_service.has_blocking_issues(consistency_report):
+            consistency_service.persist_report(
+                universe_id=universe_id,
+                timeline_id=uuid.UUID(context.timeline_id),
+                report=consistency_report,
+            )
+            raise ValueError(
+                "Consistency validation found a critical issue and blocked episode persistence."
+            )
+
+        self._job_service.update(
+            job_id,
+            progress=88,
+            message="Memory Update committing validated consequences",
+        )
+        memory_run = self._trace_service.start(
+            universe_id=universe_id,
+            job_id=job_id,
+            agent_name="Memory Update",
+            input_summary=(
+                "Validated episode, scene outcomes, relationship deltas, "
+                "and memory changes."
+            ),
         )
         result = EpisodePersistenceService(self._db).persist_episode(
             context=context,
             outline=outline,
             generated=generated_episode,
         )
+        self._trace_service.attach_episode_to_job_runs(
+            job_id=job_id,
+            episode_id=result.episode.id,
+        )
+        self._trace_service.complete(
+            memory_run,
+            output_summary=(
+                f"Created {len(result.memory_entries)} memory entries, "
+                f"{len(result.events)} events, and {len(result.scenes)} scenes."
+            ),
+            episode_id=result.episode.id,
+        )
+        consistency_checks = consistency_service.persist_report(
+            universe_id=universe_id,
+            timeline_id=result.episode.timeline_id,
+            episode_id=result.episode.id,
+            report=consistency_report,
+        )
 
         self._job_service.update(
             job_id,
             progress=94,
-            message="Memory Update storing consequences",
+            message="Finalizing agent trace",
         )
         self._job_service.update(
             job_id,
@@ -128,6 +193,8 @@ class EpisodeGenerationService:
                 "universe_id": str(universe_id),
                 "scene_count": len(result.scenes),
                 "memory_entries_created": len(result.memory_entries),
+                "consistency_issues": len(consistency_checks),
+                "consistency_verdict": consistency_report.verdict,
             },
             completed=True,
         )
@@ -161,31 +228,3 @@ class EpisodeGenerationService:
             f"{outline.model_dump_json(indent=2)}\n\n"
             "Write the final episode scenes and durable memory updates."
         )
-
-    def _start_agent_run(
-        self,
-        *,
-        universe_id: uuid.UUID,
-        job_id: uuid.UUID,
-        agent_name: str,
-        input_summary: str,
-    ) -> AgentRun:
-        agent_run = AgentRun(
-            universe_id=universe_id,
-            job_id=job_id,
-            agent_name=agent_name,
-            input_summary=input_summary,
-            status="running",
-            started_at=datetime.now(UTC),
-        )
-        self._db.add(agent_run)
-        self._db.commit()
-        self._db.refresh(agent_run)
-        return agent_run
-
-    def _complete_agent_run(self, agent_run: AgentRun, *, output_summary: str) -> None:
-        agent_run.status = "completed"
-        agent_run.output_summary = output_summary
-        agent_run.completed_at = datetime.now(UTC)
-        self._db.add(agent_run)
-        self._db.commit()

@@ -10,9 +10,12 @@ import {
   getCharacter,
   getCharacterContextPack,
   getCharacters,
+  getConsistencyDashboard,
   getEpisode,
   getEpisodeScenes,
+  getEpisodeTrace,
   getJob,
+  getJobTrace,
   getTimeline,
   getTimelineCommits,
   getTimelineDiff,
@@ -37,6 +40,7 @@ export const universeQueryKeys = {
   all: ["universes"] as const,
   detail: (id: string) => ["universes", id] as const,
   job: (id: string) => ["jobs", id] as const,
+  jobTrace: (id: string) => ["jobs", id, "trace"] as const,
   characters: (universeId: string) => ["universes", universeId, "characters"] as const,
   character: (id: string) => ["characters", id] as const,
   characterContext: (id: string) => ["characters", id, "context-pack"] as const,
@@ -48,6 +52,8 @@ export const universeQueryKeys = {
   objects: (id: string) => ["universes", id, "objects"] as const,
   episode: (id: string) => ["episodes", id] as const,
   episodeScenes: (id: string) => ["episodes", id, "scenes"] as const,
+  episodeTrace: (id: string) => ["episodes", id, "trace"] as const,
+  consistency: (universeId: string) => ["universes", universeId, "consistency"] as const,
   timelines: (universeId: string) => ["universes", universeId, "timelines"] as const,
   timeline: (id: string) => ["timelines", id] as const,
   timelineCommits: (id: string) => ["timelines", id, "commits"] as const,
@@ -102,6 +108,18 @@ export function useJob(id: string | null) {
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       return status === "completed" || status === "failed" ? false : 1200;
+    },
+  });
+}
+
+export function useJobTrace(id: string | null) {
+  return useQuery({
+    queryKey: id ? universeQueryKeys.jobTrace(id) : ["jobs", "pending", "trace"],
+    queryFn: () => getJobTrace(id as string),
+    enabled: Boolean(id),
+    refetchInterval: (query) => {
+      const steps = query.state.data?.steps ?? [];
+      return steps.some((step) => step.status === "running") ? 1200 : false;
     },
   });
 }
@@ -205,6 +223,22 @@ export function useEpisodeScenes(id: string) {
     queryKey: universeQueryKeys.episodeScenes(id),
     queryFn: () => getEpisodeScenes(id),
     enabled: Boolean(id),
+  });
+}
+
+export function useEpisodeTrace(id: string) {
+  return useQuery({
+    queryKey: universeQueryKeys.episodeTrace(id),
+    queryFn: () => getEpisodeTrace(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useConsistencyDashboard(universeId: string) {
+  return useQuery({
+    queryKey: universeQueryKeys.consistency(universeId),
+    queryFn: () => getConsistencyDashboard(universeId),
+    enabled: Boolean(universeId),
   });
 }
 

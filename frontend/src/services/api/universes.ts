@@ -1,7 +1,9 @@
 import { apiFormRequest, apiRequest } from "@/services/api/client";
 import type {
+  AgentTrace,
   Character,
   CharacterContextPack,
+  ConsistencyDashboard,
   CreateUniversePayload,
   Episode,
   EpisodeGeneratePayload,
@@ -45,6 +47,10 @@ export function createUniverseFromInput(formData: FormData) {
 
 export function getJob(id: string) {
   return apiRequest<UniverseJob>(`/jobs/${id}`);
+}
+
+export function getJobTrace(id: string) {
+  return apiRequest<AgentTrace>(`/jobs/${id}/trace`);
 }
 
 export function getCharacters(universeId: string) {
@@ -96,6 +102,14 @@ export function getEpisode(id: string) {
 
 export function getEpisodeScenes(id: string) {
   return apiRequest<EpisodeScene[]>(`/episodes/${id}/scenes`);
+}
+
+export function getEpisodeTrace(id: string) {
+  return apiRequest<AgentTrace>(`/episodes/${id}/trace`);
+}
+
+export function getConsistencyDashboard(universeId: string) {
+  return apiRequest<ConsistencyDashboard>(`/universes/${universeId}/consistency`);
 }
 
 export function getTimelines(universeId: string) {
