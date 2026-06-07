@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampedResponse
 
-ConsistencySeverity = Literal["low", "medium", "high", "critical"]
+ConsistencySeverity = Literal["low", "medium", "high", "blocker"]
 ConsistencyStatus = Literal["open", "resolved", "ignored"]
 
 
@@ -29,7 +29,10 @@ class ConsistencyIssue(BaseModel):
     @field_validator("severity", mode="before")
     @classmethod
     def normalize_severity(cls, value: str) -> str:
-        return value.strip().casefold()
+        normalized = value.strip().casefold()
+        if normalized == "critical":
+            return "blocker"
+        return normalized
 
 
 class ConsistencyReport(BaseModel):

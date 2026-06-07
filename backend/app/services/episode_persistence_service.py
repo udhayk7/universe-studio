@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 
@@ -29,6 +30,8 @@ from app.schemas.episode_generation import (
     GeneratedScene,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(slots=True)
 class EpisodePersistenceResult:
@@ -43,6 +46,60 @@ class EpisodePersistenceService:
         self._db = db
 
     def persist_episode(
+        self,
+        *,
+        context: EpisodeContextPack,
+        outline: EpisodeOutline,
+        generated: GeneratedEpisode,
+    ) -> EpisodePersistenceResult:
+        universe_id = uuid.UUID(context.universe.id)
+        timeline_id = uuid.UUID(context.timeline_id)
+        logger.info(
+            "Episode persistence transaction starting",
+            extra={
+                "universe_id": str(universe_id),
+                "timeline_id": str(timeline_id),
+                "episode_title": generated.title,
+                "scene_count": len(generated.scenes),
+                "relationship_changes": len(generated.relationship_changes),
+                "state_changes": len(generated.character_state_changes),
+                "knowledge_changes": len(generated.knowledge_changes),
+                "generated_event_memories": len(generated.new_event_memories),
+            },
+        )
+        try:
+            result = self._persist_episode(
+                context=context,
+                outline=outline,
+                generated=generated,
+            )
+        except Exception:
+            logger.exception(
+                "Episode persistence transaction failed; rolling back",
+                extra={
+                    "universe_id": str(universe_id),
+                    "timeline_id": str(timeline_id),
+                    "episode_title": generated.title,
+                },
+            )
+            self._db.rollback()
+            raise
+
+        logger.info(
+            "Episode persistence transaction committed",
+            extra={
+                "universe_id": str(universe_id),
+                "timeline_id": str(timeline_id),
+                "episode_id": str(result.episode.id),
+                "commit_id": str(result.episode.commit_id) if result.episode.commit_id else None,
+                "scene_count": len(result.scenes),
+                "event_count": len(result.events),
+                "memory_entry_count": len(result.memory_entries),
+            },
+        )
+        return result
+
+    def _persist_episode(
         self,
         *,
         context: EpisodeContextPack,
@@ -67,6 +124,17 @@ class EpisodePersistenceService:
         )
         self._db.add(commit)
         self._db.flush()
+        logger.info(
+            "Timeline commit created for generated episode",
+            extra={
+                "universe_id": str(universe.id),
+                "timeline_id": str(timeline.id),
+                "commit_id": str(commit.id),
+                "parent_commit_id": str(commit.parent_commit_id)
+                if commit.parent_commit_id
+                else None,
+            },
+        )
 
         episode = Episode(
             universe_id=universe.id,
@@ -207,6 +275,18 @@ class EpisodePersistenceService:
         universe.active_timeline_id = timeline.id
         self._db.add(timeline)
         self._db.add(universe)
+        logger.info(
+            "Episode persistence transaction ready to commit",
+            extra={
+                "universe_id": str(universe.id),
+                "timeline_id": str(timeline.id),
+                "commit_id": str(commit.id),
+                "episode_id": str(episode.id),
+                "scene_count": len(scenes),
+                "event_count": len(events),
+                "memory_entry_count": len(memory_entries),
+            },
+        )
         self._db.commit()
 
         self._db.refresh(episode)

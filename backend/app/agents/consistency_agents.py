@@ -22,8 +22,9 @@ Check:
 
 Rules:
 - Return only structured issues.
-- Use severity low, medium, high, or critical.
-- Critical means the episode should not be committed.
+- Use severity low, medium, high, or blocker.
+- Low and medium issues are warnings and should not block persistence.
+- High and blocker issues mean the episode should not be committed.
 - Prefer precise affected entities and actionable suggested fixes.
 - If the content is valid, return verdict pass and an empty issues list.
 """

@@ -34,7 +34,7 @@ export type UniverseJob = {
   updated_at: string;
 };
 
-export type ConsistencySeverity = "low" | "medium" | "high" | "critical";
+export type ConsistencySeverity = "low" | "medium" | "high" | "blocker" | "critical";
 
 export type ConsistencyStatus = "open" | "resolved" | "ignored" | string;
 
@@ -51,6 +51,21 @@ export type ConsistencyCheck = {
   status: ConsistencyStatus;
   created_at: string;
   updated_at: string;
+};
+
+export type ConsistencyAffectedEntity = {
+  entity_type?: string;
+  entity_id?: string;
+  name?: string;
+};
+
+export type ConsistencyIssueResult = {
+  severity?: ConsistencySeverity | string;
+  issue_type?: string;
+  issue?: string;
+  explanation?: string;
+  suggested_fix?: string | null;
+  affected_entities?: ConsistencyAffectedEntity[];
 };
 
 export type ConsistencyDashboard = {

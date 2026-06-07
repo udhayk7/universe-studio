@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Brain,
@@ -20,6 +21,7 @@ import { LoadingState } from "@/components/common/loading-state";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { useGenerateEpisode, useJob, useUniverse } from "@/hooks/use-universes";
 import { cn } from "@/lib/utils";
+import type { ConsistencyAffectedEntity, ConsistencyIssueResult, UniverseJob } from "@/types/universe";
 
 type EpisodeGenerationProps = {
   universeId: string;
@@ -76,6 +78,7 @@ export function EpisodeGeneration({ universeId }: EpisodeGenerationProps) {
     const value = job?.result_data?.episode_id;
     return typeof value === "string" ? value : null;
   }, [job]);
+  const consistencyBlockers = useMemo(() => getConsistencyBlockers(job), [job]);
 
   useEffect(() => {
     if (job?.status === "completed" && episodeId) {
@@ -186,10 +189,18 @@ export function EpisodeGeneration({ universeId }: EpisodeGenerationProps) {
               ) : null}
 
               {job?.status === "failed" ? (
-                <ErrorState
-                  className="mt-5"
-                  message={job.message || "Episode generation failed."}
-                />
+                consistencyBlockers.length > 0 ? (
+                  <ConsistencyFailurePanel
+                    className="mt-5"
+                    issues={consistencyBlockers}
+                    fallbackMessage={job.message || "Episode generation failed."}
+                  />
+                ) : (
+                  <ErrorState
+                    className="mt-5"
+                    message={job.message || "Episode generation failed."}
+                  />
+                )
               ) : null}
 
               <div className="mt-5 flex items-center justify-between gap-4">
@@ -253,6 +264,140 @@ export function EpisodeGeneration({ universeId }: EpisodeGenerationProps) {
       </section>
     </div>
   );
+}
+
+function ConsistencyFailurePanel({
+  issues,
+  fallbackMessage,
+  className,
+}: {
+  issues: ConsistencyIssueResult[];
+  fallbackMessage: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("rounded-2xl border border-rose-300/20 bg-rose-400/[0.07] p-4", className)}>
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-300/20 bg-black/25 text-rose-100">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-rose-50">
+            Consistency validation blocked persistence
+          </p>
+          <p className="mt-1 text-sm leading-6 text-rose-100/75">{fallbackMessage}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {issues.map((issue, index) => (
+          <ConsistencyIssueCard key={`${issue.issue ?? "issue"}-${index}`} issue={issue} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConsistencyIssueCard({ issue }: { issue: ConsistencyIssueResult }) {
+  const affectedEntities = formatAffectedEntities(issue.affected_entities);
+  const severity = issue.severity ?? "blocker";
+  const issueType = issue.issue_type?.replaceAll("_", " ") ?? "continuity";
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
+            severity === "blocker" || severity === "critical"
+              ? "border-rose-300/25 bg-rose-300/[0.12] text-rose-50"
+              : severity === "high"
+                ? "border-amber-300/25 bg-amber-300/[0.12] text-amber-50"
+                : "border-sky-300/25 bg-sky-300/[0.12] text-sky-50",
+          )}
+        >
+          {severity}
+        </span>
+        <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium capitalize text-slate-300">
+          {issueType}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm font-semibold leading-6 text-white">
+        {issue.issue ?? "Continuity issue detected."}
+      </p>
+      {issue.explanation ? (
+        <p className="mt-1 text-sm leading-6 text-slate-300">{issue.explanation}</p>
+      ) : null}
+      {affectedEntities ? (
+        <p className="mt-3 text-xs leading-5 text-slate-400">
+          <span className="font-medium uppercase tracking-[0.16em] text-slate-500">Entity</span>
+          <span className="ml-2 text-slate-300">{affectedEntities}</span>
+        </p>
+      ) : null}
+      {issue.suggested_fix ? (
+        <div className="mt-3 rounded-lg border border-sky-300/15 bg-sky-300/[0.06] p-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-sky-100/70">
+            Suggested Fix
+          </p>
+          <p className="mt-1 text-sm leading-6 text-sky-50">{issue.suggested_fix}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function getConsistencyBlockers(job: UniverseJob | undefined): ConsistencyIssueResult[] {
+  const blockers = job?.result_data?.consistency_blockers;
+  if (!Array.isArray(blockers)) return [];
+
+  return blockers.flatMap((blocker) => {
+    if (!isRecord(blocker)) return [];
+    return [
+      {
+        severity: asString(blocker.severity),
+        issue_type: asString(blocker.issue_type),
+        issue: asString(blocker.issue),
+        explanation: asString(blocker.explanation),
+        suggested_fix: asNullableString(blocker.suggested_fix),
+        affected_entities: parseAffectedEntities(blocker.affected_entities),
+      },
+    ];
+  });
+}
+
+function parseAffectedEntities(value: unknown): ConsistencyAffectedEntity[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entity) => {
+    if (!isRecord(entity)) return [];
+    return [
+      {
+        entity_type: asString(entity.entity_type),
+        entity_id: asString(entity.entity_id),
+        name: asString(entity.name),
+      },
+    ];
+  });
+}
+
+function formatAffectedEntities(entities: ConsistencyAffectedEntity[] | undefined) {
+  if (!entities || entities.length === 0) return null;
+  return entities
+    .map((entity) => entity.name || entity.entity_id || entity.entity_type)
+    .filter(Boolean)
+    .join(", ");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function asNullableString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
 function StageCard({

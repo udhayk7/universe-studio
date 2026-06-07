@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import uuid
+from collections import Counter
 
 from sqlalchemy.orm import Session
 
 from app.agents.episode_agents import EpisodeAgentRunner
+from app.schemas.consistency import ConsistencyIssue, ConsistencyReport
 from app.schemas.episode_generation import EpisodeContextPack, EpisodeOutline
 from app.services.agent_trace_service import AgentTraceService
 from app.services.consistency_service import ConsistencyService
@@ -14,6 +17,60 @@ from app.services.episode_persistence_service import (
     EpisodePersistenceService,
 )
 from app.services.job_service import JobService
+
+logger = logging.getLogger(__name__)
+
+
+class ConsistencyBlockedEpisodeError(ValueError):
+    def __init__(
+        self,
+        *,
+        report: ConsistencyReport,
+        blocking_issues: list[ConsistencyIssue],
+    ) -> None:
+        self.report = report
+        self.blocking_issues = blocking_issues
+        super().__init__(self._message())
+
+    def _message(self) -> str:
+        if not self.blocking_issues:
+            return "Consistency validation blocked episode persistence."
+
+        first_issue = self.blocking_issues[0]
+        affected = ", ".join(
+            entity.name or entity.entity_id or entity.entity_type
+            for entity in first_issue.affected_entities
+        )
+        affected_text = f" Affected: {affected}." if affected else ""
+        fix_text = (
+            f" Suggested fix: {first_issue.suggested_fix}"
+            if first_issue.suggested_fix
+            else ""
+        )
+        return (
+            "Consistency validation blocked episode persistence: "
+            f"[{first_issue.severity.upper()}] {self._sentence(first_issue.issue)} "
+            f"{self._sentence(first_issue.explanation)}{affected_text}{fix_text}"
+        )
+
+    def result_data(self) -> dict[str, object]:
+        return {
+            "error_type": "consistency_blocked",
+            "consistency_verdict": self.report.verdict,
+            "consistency_summary": self.report.summary,
+            "consistency_issues": len(self.report.issues),
+            "consistency_blockers": [
+                issue.model_dump(mode="json", exclude_none=True)
+                for issue in self.blocking_issues
+            ],
+            "consistency_report": self.report.model_dump(mode="json"),
+        }
+
+    def _sentence(self, text: str) -> str:
+        stripped = text.strip()
+        if stripped.endswith((".", "!", "?")):
+            return stripped
+        return f"{stripped}."
 
 
 class EpisodeGenerationService:
@@ -122,6 +179,25 @@ class EpisodeGenerationService:
             context=context,
             generated=generated_episode,
         )
+        logger.info(
+            "Full consistency report for episode generation job %s:\n%s",
+            job_id,
+            consistency_report.model_dump_json(indent=2),
+        )
+        blocking_issues = consistency_service.blocking_issues(consistency_report)
+        severity_counts = Counter(issue.severity for issue in consistency_report.issues)
+        logger.info(
+            "Consistency decision for episode generation",
+            extra={
+                "job_id": str(job_id),
+                "universe_id": str(universe_id),
+                "timeline_id": context.timeline_id,
+                "verdict": consistency_report.verdict,
+                "severity_counts": dict(severity_counts),
+                "blocker_count": len(blocking_issues),
+                "should_persist": not blocking_issues,
+            },
+        )
         self._trace_service.complete(
             consistency_run,
             output_summary=(
@@ -130,14 +206,28 @@ class EpisodeGenerationService:
                 f"{'' if len(consistency_report.issues) == 1 else 's'}."
             ),
         )
-        if consistency_service.has_blocking_issues(consistency_report):
+        if blocking_issues:
+            logger.warning(
+                "Episode persistence blocked by consistency validation",
+                extra={
+                    "job_id": str(job_id),
+                    "universe_id": str(universe_id),
+                    "timeline_id": context.timeline_id,
+                    "blocker_count": len(blocking_issues),
+                    "first_blocker": blocking_issues[0].model_dump(
+                        mode="json",
+                        exclude_none=True,
+                    ),
+                },
+            )
             consistency_service.persist_report(
                 universe_id=universe_id,
                 timeline_id=uuid.UUID(context.timeline_id),
                 report=consistency_report,
             )
-            raise ValueError(
-                "Consistency validation found a critical issue and blocked episode persistence."
+            raise ConsistencyBlockedEpisodeError(
+                report=consistency_report,
+                blocking_issues=blocking_issues,
             )
 
         self._job_service.update(

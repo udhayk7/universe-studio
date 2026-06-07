@@ -22,9 +22,10 @@ type ConsistencyDashboardProps = {
   universeId: string;
 };
 
-const severityOrder: ConsistencySeverity[] = ["critical", "high", "medium", "low"];
+const severityOrder: ConsistencySeverity[] = ["blocker", "critical", "high", "medium", "low"];
 
 const severityClass: Record<ConsistencySeverity, string> = {
+  blocker: "border-rose-300/25 bg-rose-400/[0.08] text-rose-100",
   critical: "border-rose-300/25 bg-rose-400/[0.08] text-rose-100",
   high: "border-amber-300/25 bg-amber-300/[0.08] text-amber-100",
   medium: "border-sky-300/25 bg-sky-300/[0.08] text-sky-100",
@@ -106,8 +107,11 @@ export function ConsistencyDashboard({ universeId }: ConsistencyDashboardProps) 
               <MetricCard label="Resolved" value={dashboard.resolved_issues} tone="success" />
               <MetricCard label="Total Reports" value={totalIssues} tone="neutral" />
               <MetricCard
-                label="Critical"
-                value={dashboard.severity_breakdown.critical ?? 0}
+                label="Blockers"
+                value={
+                  (dashboard.severity_breakdown.blocker ?? 0) +
+                  (dashboard.severity_breakdown.critical ?? 0)
+                }
                 tone="danger"
               />
             </div>
@@ -199,6 +203,8 @@ function SeverityRow({
           className={cn(
             "h-full rounded-full",
             severity === "critical"
+              ? "bg-rose-300"
+              : severity === "blocker"
               ? "bg-rose-300"
               : severity === "high"
                 ? "bg-amber-300"

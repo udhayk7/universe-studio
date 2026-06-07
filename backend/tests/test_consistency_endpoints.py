@@ -12,6 +12,18 @@ from app.db.models.episode import Episode
 from app.db.models.job import Job
 from app.db.models.timeline import Timeline
 from app.db.models.universe import Universe
+from app.schemas.consistency import ConsistencyIssue
+
+
+def test_consistency_severity_normalizes_legacy_critical_to_blocker() -> None:
+    issue = ConsistencyIssue(
+        severity="critical",
+        issue_type="timeline",
+        issue="Timeline fact leaks between branches.",
+        explanation="A Timeline A event is presented as true in Timeline B.",
+    )
+
+    assert issue.severity == "blocker"
 
 
 def test_consistency_check_persists_character_issue(
@@ -31,7 +43,7 @@ def test_consistency_check_persists_character_issue(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["report"]["verdict"] == "warning"
+    assert body["report"]["verdict"] == "fail"
     assert body["checks"]
     check = body["checks"][0]
     assert UUID(check["id"])

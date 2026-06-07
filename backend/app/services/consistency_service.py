@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import re
 import uuid
 from collections import Counter
 
@@ -25,6 +27,9 @@ from app.schemas.consistency import (
     ConsistencyReport,
 )
 from app.schemas.episode_generation import EpisodeContextPack, GeneratedEpisode
+
+logger = logging.getLogger(__name__)
+BLOCKING_SEVERITIES = frozenset({"high", "blocker"})
 
 
 class ConsistencyService:
@@ -100,6 +105,7 @@ class ConsistencyService:
                 "low": severity_counts["low"],
                 "medium": severity_counts["medium"],
                 "high": severity_counts["high"],
+                "blocker": severity_counts["blocker"],
                 "critical": severity_counts["critical"],
             },
             timeline_conflicts=type_counts["timeline"],
@@ -129,6 +135,18 @@ class ConsistencyService:
         episode_id: uuid.UUID | None = None,
     ) -> list[ConsistencyCheckRead]:
         checks: list[ConsistencyCheck] = []
+        logger.info(
+            "Persisting consistency report",
+            extra={
+                "universe_id": str(universe_id),
+                "timeline_id": str(timeline_id),
+                "episode_id": str(episode_id) if episode_id else None,
+                "verdict": report.verdict,
+                "issue_count": len(report.issues),
+                "severity_counts": dict(Counter(issue.severity for issue in report.issues)),
+                "blocker_count": len(self.blocking_issues(report)),
+            },
+        )
         for issue in report.issues:
             check = ConsistencyCheck(
                 universe_id=universe_id,
@@ -153,7 +171,10 @@ class ConsistencyService:
         return [ConsistencyCheckRead.model_validate(check) for check in checks]
 
     def has_blocking_issues(self, report: ConsistencyReport) -> bool:
-        return any(issue.severity == "critical" for issue in report.issues)
+        return bool(self.blocking_issues(report))
+
+    def blocking_issues(self, report: ConsistencyReport) -> list[ConsistencyIssue]:
+        return [issue for issue in report.issues if issue.severity in BLOCKING_SEVERITIES]
 
     def _resolve_universe_timeline(
         self,
@@ -280,7 +301,7 @@ class ConsistencyService:
                 if self._is_dead(character.status):
                     issues.append(
                         ConsistencyIssue(
-                            severity="critical",
+                            severity="blocker",
                             issue_type="character",
                             issue="Dead character is acting in a generated scene.",
                             explanation=(
@@ -416,7 +437,7 @@ class ConsistencyService:
         *,
         source: str,
     ) -> ConsistencyReport:
-        if any(issue.severity == "critical" for issue in issues):
+        if any(issue.severity in BLOCKING_SEVERITIES for issue in issues):
             verdict = "fail"
         elif issues:
             verdict = "warning"
@@ -449,13 +470,11 @@ class ConsistencyService:
         ).all()
         for rule in rules:
             lowered_rule = rule.content.casefold()
+            markers = self._world_rule_violation_markers(lowered_rule)
             if (
                 ("cannot" in lowered_rule or "never" in lowered_rule or "forbidden" in lowered_rule)
                 and self._rule_subject_appears(lowered_rule, lowered_content)
-                and any(
-                    marker in lowered_content
-                    for marker in ("copy", "copied", "duplicate", "duplicated", "clone")
-                )
+                and self._affirmative_violation_marker_appears(lowered_content, markers)
             ):
                 issues.append(
                     ConsistencyIssue(
@@ -476,6 +495,41 @@ class ConsistencyService:
                     )
                 )
         return issues
+
+    def _world_rule_violation_markers(self, lowered_rule: str) -> tuple[str, ...]:
+        if any(marker in lowered_rule for marker in ("copy", "copied", "duplicate", "clone")):
+            return ("copy", "copied", "duplicate", "duplicated", "clone", "cloned")
+        if any(marker in lowered_rule for marker in ("recover", "recovered", "restore")):
+            return ("recover", "recovered", "restore", "restored", "reclaim", "reclaimed")
+        return ("violate", "violated", "break", "broke", "bypass", "bypassed")
+
+    def _affirmative_violation_marker_appears(
+        self,
+        lowered_content: str,
+        markers: tuple[str, ...],
+    ) -> bool:
+        for marker in markers:
+            pattern = re.compile(rf"\b{re.escape(marker)}\b")
+            for match in pattern.finditer(lowered_content):
+                window = lowered_content[max(0, match.start() - 48) : match.end() + 24]
+                if any(
+                    negation in window
+                    for negation in (
+                        "cannot ",
+                        "can't ",
+                        "do not ",
+                        "does not ",
+                        "did not ",
+                        "must not ",
+                        "not ",
+                        "never ",
+                        "no ",
+                        "without ",
+                    )
+                ):
+                    continue
+                return True
+        return False
 
     def _branch_leakage_issues(
         self,
