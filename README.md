@@ -193,13 +193,15 @@ Infrastructure:
 - [Architecture Summary](docs/ARCHITECTURE_SUMMARY.md)
 - [Judge FAQ](docs/JUDGE_FAQ.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)
 - [Launch Readiness Report](docs/LAUNCH_READINESS_REPORT.md)
 
 ## Known Limitations
 
-- No video, image, or voice generation yet.
+- No video or voice generation yet.
 - The demo seeder is deterministic by design, so judges can reliably inspect the product.
 - Full AI workflows require `OPENAI_API_KEY`.
+- Storyboard image generation uses OpenAI Images and stores frames in PostgreSQL.
 - Supabase Storage is scaffolded but not central to the current demo.
 - Some integration tests require `TEST_DATABASE_URL`.
 
