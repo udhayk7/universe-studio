@@ -330,17 +330,12 @@ OpenAI technologies were used extensively throughout development.
 
 ### Demo Video
 
-TBD
+https://drive.google.com/file/d/14TKtCg9T5miy6Q_GiRhE5KEGDok0xbtT/view?usp=sharing
 
 ### Pitch Deck
 
-TBD
+https://drive.google.com/file/d/1Jrl83uMlEsQT-R4UjX9eH4nhW33qoMFM/view?usp=sharing
 
-### Live Demo
-
-TBD
-
----
 
 ## Deployment Status
 
