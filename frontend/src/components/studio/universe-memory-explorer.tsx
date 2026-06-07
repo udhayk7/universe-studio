@@ -512,7 +512,7 @@ function EventTimeline({ events, isLoading }: { events: MemoryEvent[]; isLoading
         {events.map((event) => (
           <motion.article
             key={event.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-2xl border border-white/10 bg-black/25 p-5"
           >

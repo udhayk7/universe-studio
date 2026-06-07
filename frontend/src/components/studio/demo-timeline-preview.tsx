@@ -33,7 +33,7 @@ export function DemoTimelinePreview() {
             return (
               <motion.div
                 key={event.label}
-                initial={{ opacity: 0, y: 18 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08, duration: 0.35 }}
                 className={`relative grid gap-4 md:grid-cols-2 ${

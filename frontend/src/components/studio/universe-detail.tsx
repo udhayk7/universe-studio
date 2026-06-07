@@ -149,7 +149,7 @@ export function UniverseDetail({ id }: UniverseDetailProps) {
 
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           className="mt-5"
@@ -288,7 +288,7 @@ function CharacterCard({ universeId, character }: { universeId: string; characte
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="group cinematic-surface rounded-2xl p-5"
     >

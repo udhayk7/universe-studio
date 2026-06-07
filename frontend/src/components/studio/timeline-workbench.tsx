@@ -350,7 +350,7 @@ function TimelineRail({
         {events.map((event) => (
           <motion.article
             key={`${event.id}-${event.commit_id ?? "commit"}`}
-            initial={{ opacity: 0, y: 10 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-2xl border border-white/10 bg-black/25 p-4"
           >
@@ -453,7 +453,7 @@ function BranchModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
       <motion.form
-        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        initial={false}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         onSubmit={async (submitEvent) => {
           submitEvent.preventDefault();

@@ -183,7 +183,7 @@ function Panel({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="cinematic-surface rounded-2xl p-5"
     >

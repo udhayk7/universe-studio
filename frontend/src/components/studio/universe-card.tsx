@@ -18,7 +18,7 @@ export function UniverseCard({ universe }: UniverseCardProps) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 14 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="group cinematic-surface rounded-2xl p-5"

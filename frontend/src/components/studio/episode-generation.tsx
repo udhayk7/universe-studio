@@ -277,7 +277,7 @@ function StageCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         "min-h-36 rounded-2xl border p-4 transition",

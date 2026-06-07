@@ -37,6 +37,7 @@ export function CreateUniverseForm() {
   const [genre, setGenre] = useState("");
   const [tone, setTone] = useState("");
   const [idea, setIdea] = useState("A city where memories are currency.");
+  const [script, setScript] = useState("");
   const [scene, setScene] = useState("");
   const [scriptFile, setScriptFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -46,11 +47,13 @@ export function CreateUniverseForm() {
   const sourceText = useMemo(() => {
     if (createInputMode === "idea") return idea;
     if (createInputMode === "scene") return scene;
-    return scriptFile ? `Source file: ${scriptFile.name}` : "";
-  }, [createInputMode, idea, scene, scriptFile]);
+    return scriptFile ? `Source file: ${scriptFile.name}` : script;
+  }, [createInputMode, idea, scene, script, scriptFile]);
 
   const hasSource =
-    createInputMode === "script" ? scriptFile !== null : sourceText.trim().length > 0;
+    createInputMode === "script"
+      ? scriptFile !== null || script.trim().length > 0
+      : sourceText.trim().length > 0;
   const job = jobQuery.data;
   const isTerminal = job?.status === "completed" || job?.status === "failed";
   const isWorking = createUniverse.isPending || Boolean(jobId && !isTerminal);
@@ -163,7 +166,7 @@ export function CreateUniverseForm() {
           <div className="mt-5">
             {createInputMode === "idea" ? (
               <motion.label
-                initial={{ opacity: 0, y: 8 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 className="grid gap-2"
               >
@@ -178,7 +181,7 @@ export function CreateUniverseForm() {
             ) : null}
 
             {createInputMode === "script" ? (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="grid gap-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -189,7 +192,7 @@ export function CreateUniverseForm() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-64 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/30 p-8 text-center transition hover:border-sky-300/35 hover:bg-white/[0.04]"
+                  className="flex min-h-32 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/30 p-6 text-center transition hover:border-sky-300/35 hover:bg-white/[0.04]"
                 >
                   <Upload className="h-8 w-8 text-sky-200" />
                   <span className="mt-4 text-sm font-medium text-white">
@@ -197,12 +200,22 @@ export function CreateUniverseForm() {
                   </span>
                   <span className="mt-2 text-xs text-slate-500">TXT, FDX, Fountain</span>
                 </button>
+                <label className="grid gap-2">
+                  <span className="text-sm font-medium text-slate-200">Script Text</span>
+                  <textarea
+                    value={script}
+                    onChange={(event) => setScript(event.target.value)}
+                    placeholder="Paste a screenplay, YouTube script, or long-form story treatment here."
+                    rows={7}
+                    className="min-h-48 resize-none rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-white outline-none transition placeholder:text-slate-600 focus:border-sky-300/40 focus:bg-black/45"
+                  />
+                </label>
               </motion.div>
             ) : null}
 
             {createInputMode === "scene" ? (
               <motion.label
-                initial={{ opacity: 0, y: 8 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 className="grid gap-2"
               >
@@ -249,7 +262,7 @@ export function CreateUniverseForm() {
 
           {isWorking || job?.status === "completed" ? (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               className="mt-5 rounded-2xl border border-sky-300/15 bg-sky-300/[0.04] p-4"
             >

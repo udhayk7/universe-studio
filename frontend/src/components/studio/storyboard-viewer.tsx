@@ -154,7 +154,7 @@ function StoryboardScenePanel({
 }) {
   return (
     <motion.article
-      initial={{ opacity: 0, y: 14 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="overflow-hidden rounded-3xl border border-white/10 bg-black/35"
     >

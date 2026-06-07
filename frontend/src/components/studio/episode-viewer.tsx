@@ -179,7 +179,7 @@ function SceneReader({ universeId, scene }: { universeId: string; scene: Episode
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 14 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="cinematic-surface overflow-hidden rounded-2xl"
     >
@@ -362,7 +362,7 @@ function AgentTraceCard({ step, index }: { step: AgentTraceStep; index: number }
   return (
     <motion.article
       id={`trace-${step.id}`}
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="cinematic-surface overflow-hidden rounded-2xl"
     >

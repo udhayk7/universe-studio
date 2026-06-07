@@ -276,7 +276,7 @@ function IssueCard({ issue }: { issue: ConsistencyCheck }) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 10 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border border-white/10 bg-black/25 p-4"
     >
